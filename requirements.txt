@@ -1,0 +1,21 @@
+# Core dependencies
+python-dotenv
+streamlit
+
+# LangChain and model integrations
+langchain
+langchain-openai
+langgraph
+langchain-mcp-adapters
+
+# MCP (Model Context Protocol) server and client
+mcp
+fastmcp
+
+# Async utilities
+aiohttp
+asyncio
+
+# Optional: for better debugging/logging
+tqdm
+rich
