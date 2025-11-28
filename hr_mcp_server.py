@@ -20,12 +20,33 @@ mcp = FastMCP(
 
 @mcp.tool()
 def get_employee_details(employee_id: str) -> dict:
-    return {
-        "employee_id": employee_id,
-        "name": "Alice Johnson",
-        "role": "Software Engineer",
-        "department": "Tech"
+    # Sample employee database (you can expand later)
+    employees = {
+        "E001": {
+            "employee_id": "E001",
+            "name": "Alice Johnson",
+            "role": "Software Engineer",
+            "department": "Tech"
+        },
+        "E002": {
+            "employee_id": "E002",
+            "name": "Michael Smith",
+            "role": "Senior Accountant",
+            "department": "Finance"
+        },
+        "E003": {
+            "employee_id": "E003",
+            "name": "Priya Sharma",
+            "role": "HR Manager",
+            "department": "Human Resources"
+        }
     }
+
+    # Return employee if exists, otherwise return message
+    return employees.get(employee_id, {
+        "error": f"No employee found with id {employee_id}"
+    })
+
 
 @mcp.tool()
 def check_leave_balance(employee_id: str) -> dict:
