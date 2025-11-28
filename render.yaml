@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: mcp-multi-agent-console
+    env: docker
+    plan: free
+    region: oregon
+    branch: main
+    envVars:
+      - key: PORT
+        value: 8501
+      - key: OPENAI_API_KEY
+        sync: false

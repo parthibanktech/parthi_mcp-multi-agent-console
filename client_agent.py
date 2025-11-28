@@ -18,7 +18,7 @@ st.sidebar.markdown("Connected Servers:")
 st.sidebar.success("💰 Finance Server → http://localhost:8010/mcp")
 st.sidebar.success("👩‍💼 HR Server → http://localhost:8011/mcp")
 
-OPENAI_API_KEY = st.sidebar.text_input("🔑 OpenAI API Key", type="password")
+OPENAI_API_KEY = st.sidebar.text_input("🔑 OpenAI API Key", value=os.getenv("OPENAI_API_KEY", ""), type="password")
 st.sidebar.divider()
 
 dark = st.sidebar.checkbox("🌙 Dark Theme", value=True)
@@ -41,7 +41,8 @@ def is_port_in_use(port: int) -> bool:
 
 async def query_agents(prompt):
     """Send query to both Finance & HR MCP Servers."""
-    local_ip = socket.gethostbyname(socket.gethostname())
+    # Use localhost for internal communication in the same container
+    local_ip = "127.0.0.1"
 
     if not is_port_in_use(8010) or not is_port_in_use(8011):
         return "⚠️ One or more MCP servers are not running. Please start them first."

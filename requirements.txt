@@ -14,7 +14,7 @@ fastmcp
 
 # Async utilities
 aiohttp
-asyncio
+
 
 # Optional: for better debugging/logging
 tqdm
