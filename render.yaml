@@ -6,8 +6,7 @@ services:
     plan: free
     region: oregon
     branch: main
-    dockerfilePath: ./Dockerfile.finance
-    dockerContext: .
+    image: parthibanktech3/mcp-finance-server:latest
     envVars:
       - key: PORT
         value: 8010
@@ -20,8 +19,7 @@ services:
     plan: free
     region: oregon
     branch: main
-    dockerfilePath: ./Dockerfile.hr
-    dockerContext: .
+    image: parthibanktech3/mcp-hr-server:latest
     envVars:
       - key: PORT
         value: 8011
@@ -34,8 +32,7 @@ services:
     plan: free
     region: oregon
     branch: main
-    dockerfilePath: ./Dockerfile.client
-    dockerContext: .
+    image: parthibanktech3/mcp-client-app:latest
     envVars:
       - key: PORT
         value: 8501

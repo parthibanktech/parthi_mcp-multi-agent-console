@@ -1,45 +1,142 @@
+# ============================================================
+# Docker Compose file version
+# "3.8" is the Compose file format version.
+# It defines which features are available and is compatible with
+# modern Docker & Docker Compose (v1 & v2).
+# ============================================================
 version: "3.8"
 
+# ============================================================
+# services:
+# This section defines all the containers (services) that will run
+# together as part of this application stack.
+# Here we have:
+#   1) finance-server  → Finance MCP Server (backend)
+#   2) hr-server       → HR MCP Server (backend)
+#   3) client-app      → Streamlit Client (frontend)
+# ============================================================
 services:
+
   # ===========================
   # Finance MCP Server
   # ===========================
   finance-server:
+    # image:
+    # Name of the Docker image to use.
+    # Here it's pointing to an image on Docker Hub:
+    #   parthibanktech3/mcp-finance-server:latest
+    # When you run `docker-compose up`, Docker will:
+    #   - Use this image if already built/pulled, OR
+    #   - Pull it from Docker Hub if not found locally.
     image: parthibanktech3/mcp-finance-server:latest # Pull/Push from Docker Hub
+
+    # build:
+    # Optional build configuration.
+    # This tells Docker how to build the image if it doesn't exist or
+    # if you explicitly run: `docker-compose build` or `docker-compose up --build`
+    # It uses the Dockerfile.finance in the current directory.
     build:
+      # context: The folder to send to the Docker daemon as build context.
+      # "." means the current directory where docker-compose.yml is located.
       context: .
+      # dockerfile: Which Dockerfile to use inside that context.
       dockerfile: Dockerfile.finance
+
+    # container_name:
+    # Custom name for the running container.
+    # Without this, Docker auto-generates something like mcp_finance-server_1.
     container_name: mcp-finance-server
+
+    # ports:
+    # Mapping between HOST:CONTAINER ports.
+    # "8010:8010" means:
+    #   - Expose container’s port 8010 to host machine’s port 8010.
+    #   - So you can access it from your PC using: http://localhost:8010
     ports:
       - "8010:8010"
+
+    # environment:
+    # Environment variables passed into the container.
+    # Inside the container, your app can read PORT=8010.
     environment:
       - PORT=8010
+
+    # networks:
+    # Attach this container to a custom network called "mcp-network".
+    # This allows other services on the same network to reach it by name:
+    # e.g., http://finance-server:8010
     networks:
       - mcp-network
+
+    # restart:
+    # Policy that defines when Docker should restart the container.
+    # "always" means:
+    #   - Restart if container crashes
+    #   - Restart on Docker daemon startup
     restart: always
+
+    # healthcheck:
+    # Docker uses this to check if the container is "healthy".
+    # Other services can depend on this health status.
     healthcheck:
+      # test:
+      # Command to run inside the container to test health.
+      # Here it's a small Python snippet:
+      #   - Opens a TCP socket to localhost:8010
+      #   - If connect() works → healthy
+      #   - If it fails or times out → unhealthy
       test: [ "CMD", "python", "-c", "import socket; s = socket.socket(); s.settimeout(3); s.connect(('localhost', 8010)); s.close()" ]
+
+      # interval:
+      # How often to run the healthcheck.
+      # "10s" means every 10 seconds.
       interval: 10s
+
+      # timeout:
+      # Max time allowed for the healthcheck to run.
+      # If the test doesn’t finish within 5 seconds, it’s considered failed.
       timeout: 5s
+
+      # retries:
+      # Number of consecutive failures before marking the container as "unhealthy".
       retries: 3
+
+      # start_period:
+      # Grace period after container starts before counting failures.
+      # Gives the app some time to boot up.
       start_period: 15s
 
   # ===========================
   # HR MCP Server
   # ===========================
   hr-server:
+    # Image from Docker Hub for HR MCP Server.
     image: parthibanktech3/mcp-hr-server:latest # Pull/Push from Docker Hub
+
+    # Build config for local/CI builds using Dockerfile.hr.
     build:
       context: .
       dockerfile: Dockerfile.hr
+
+    # Custom container name.
     container_name: mcp-hr-server
+
+    # Expose port 8011 from container to host.
     ports:
       - "8011:8011"
+
+    # Environment variable PORT=8011 inside container.
     environment:
       - PORT=8011
+
+    # Same Docker network as finance-server so they can talk internally.
     networks:
       - mcp-network
+
+    # Always restart on crash or daemon restart.
     restart: always
+
+    # Healthcheck similar to finance-server but targeting port 8011.
     healthcheck:
       test: [ "CMD", "python", "-c", "import socket; s = socket.socket(); s.settimeout(3); s.connect(('localhost', 8011)); s.close()" ]
       interval: 10s
@@ -51,25 +148,57 @@ services:
   # Streamlit Client Application
   # ===========================
   client-app:
+    # Image for the frontend/Streamlit client from Docker Hub.
     image: parthibanktech3/mcp-client-app:latest # Pull/Push from Docker Hub
+
+    # Build configuration (if building locally or in CI) using Dockerfile.client.
     build:
       context: .
       dockerfile: Dockerfile.client
+
+    # Custom container name.
     container_name: mcp-client-app
+
+    # Expose port 8501 so you can access Streamlit at http://localhost:8501
     ports:
       - "8501:8501"
+
+    # Environment variables for the client app.
     environment:
+      # App listens on port 8501 inside container.
       - PORT=8501
+
+      # OPENAI_API_KEY:
+      # Value is taken from your host environment or `.env` file.
+      # Docker Compose will substitute ${OPENAI_API_KEY}.
       - OPENAI_API_KEY=${OPENAI_API_KEY} # Read from .env or shell
+
+      # FINANCE_SERVER_URL:
+      # Note: using "finance-server" (service name) instead of "localhost".
+      # Inside Docker network, containers talk using service names.
       - FINANCE_SERVER_URL=http://finance-server:8010 # Use service name, not localhost
+
+      # HR_SERVER_URL:
+      # Same concept, using hr-server service name.
       - HR_SERVER_URL=http://hr-server:8011
+
+    # Attach to the same Docker network so it can reach both servers.
     networks:
       - mcp-network
+
+    # depends_on:
+    # This sets service startup order and health conditions.
+    # Here, client-app waits until finance-server and hr-server are *healthy*
+    # (based on their healthchecks) before starting.
     depends_on:
       finance-server:
-        condition: service_healthy # Wait until Finance MCP is healthy
+        # Only start client-app after finance-server passes healthcheck.
+        condition: service_healthy
       hr-server:
-        condition: service_healthy # Wait until HR MCP is healthy
+        # Only start client-app after hr-server passes healthcheck.
+        condition: service_healthy
+
+    # Restart if the client app crashes or Docker restarts.
     restart: always
 
 # ===========================
@@ -77,4 +206,13 @@ services:
 # ===========================
 networks:
   mcp-network:
+    # driver: bridge
+    # "bridge" is the default Docker network driver for local setups.
+    # It creates an internal isolated network for the containers.
+    # Containers in this network can reach each other by:
+    #   http://<service-name>:<port>
+    # Example:
+    #   - http://finance-server:8010
+    #   - http://hr-server:8011
+    #   - http://client-app:8501
     driver: bridge # Default Docker bridge network

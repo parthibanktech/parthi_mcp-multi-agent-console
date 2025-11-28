@@ -17,7 +17,7 @@ st.set_page_config(page_title="Parthi Multi-Agent MCP Console - V2", page_icon="
 FINANCE_SERVER_URL = os.getenv("FINANCE_SERVER_URL", "http://localhost:8010")
 HR_SERVER_URL = os.getenv("HR_SERVER_URL", "http://localhost:8011")
 
-st.sidebar.title("⚙️ MCP Configuration")
+st.sidebar.title("⚙️ MCP Configuration") 
 st.sidebar.markdown("Connected Servers:")
 st.sidebar.success(f"💰 Finance Server → {FINANCE_SERVER_URL}/mcp")
 st.sidebar.success(f"👩‍💼 HR Server → {HR_SERVER_URL}/mcp")
@@ -34,7 +34,7 @@ if dark:
         </style>
     """, unsafe_allow_html=True)
 
-st.title("🤝 Multi-Agent MCP Console")
+st.title("🤝 Parthi  Multi-Agent MCP Console")
 st.caption("Interact with both Finance & HR MCP Agents through LangChain + Streamlit.")
 
 # ---------------- Helper Functions ----------------
