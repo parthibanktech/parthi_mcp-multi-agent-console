@@ -111,4 +111,4 @@ jobs:
       # 7) Verify Docker Compose Config
       # --------------------------------------------------
       - name: Verify Docker Compose Config
-        run: docker-compose config
+        run: docker compose config
