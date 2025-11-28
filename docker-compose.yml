@@ -1,12 +1,80 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  mcp-app:
-    build: .
-    container_name: mcp-multi-agent-app
+  # ===========================
+  # Finance MCP Server
+  # ===========================
+  finance-server:
+    image: parthibanktech3/mcp-finance-server:latest # Pull/Push from Docker Hub
+    build:
+      context: .
+      dockerfile: Dockerfile.finance
+    container_name: mcp-finance-server
+    ports:
+      - "8010:8010"
+    environment:
+      - PORT=8010
+    networks:
+      - mcp-network
+    restart: always
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import socket; s = socket.socket(); s.settimeout(3); s.connect(('localhost', 8010)); s.close()" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ===========================
+  # HR MCP Server
+  # ===========================
+  hr-server:
+    image: parthibanktech3/mcp-hr-server:latest # Pull/Push from Docker Hub
+    build:
+      context: .
+      dockerfile: Dockerfile.hr
+    container_name: mcp-hr-server
+    ports:
+      - "8011:8011"
+    environment:
+      - PORT=8011
+    networks:
+      - mcp-network
+    restart: always
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import socket; s = socket.socket(); s.settimeout(3); s.connect(('localhost', 8011)); s.close()" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ===========================
+  # Streamlit Client Application
+  # ===========================
+  client-app:
+    image: parthibanktech3/mcp-client-app:latest # Pull/Push from Docker Hub
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: mcp-client-app
     ports:
       - "8501:8501"
     environment:
       - PORT=8501
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY} # Read from .env or shell
+      - FINANCE_SERVER_URL=http://finance-server:8010 # Use service name, not localhost
+      - HR_SERVER_URL=http://hr-server:8011
+    networks:
+      - mcp-network
+    depends_on:
+      finance-server:
+        condition: service_healthy # Wait until Finance MCP is healthy
+      hr-server:
+        condition: service_healthy # Wait until HR MCP is healthy
     restart: always
+
+# ===========================
+# Shared Network
+# ===========================
+networks:
+  mcp-network:
+    driver: bridge # Default Docker bridge network

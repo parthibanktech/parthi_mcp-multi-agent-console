@@ -1,0 +1,114 @@
+# ============================================================
+# name: This is just a display name for the workflow in GitHub Actions UI.
+# It does NOT affect execution logic. It's only for humans.
+# ============================================================
+name: CI/CD Pipeline
+
+# ============================================================
+# on: This section tells GitHub *WHEN* to trigger this workflow.
+# Here we trigger on:
+#   1) push to branch "main"
+#   2) pull_request targeting branch "main"
+# GitHub automatically watches your repo for these events.
+# Whenever they occur, it runs this workflow file.
+# ============================================================
+on:
+  push:
+    # Run this workflow whenever someone pushes commits to branch "main".
+    branches: [ "main" ]
+  pull_request:
+    # Also run this workflow for any PR whose target branch is "main".
+    branches: [ "main" ]
+
+# ============================================================
+# jobs: A workflow is made of one or more jobs.
+# Each job runs on a runner (like a mini temporary VM in GitHub's cloud).
+# Below we define:
+#   1) build-and-test (CI)
+#   2) deploy-to-ec2 (CD)  --> currently commented out
+# ============================================================
+jobs:
+
+  # ======================================================
+  # CI STAGE: Build & Test
+  # This job will:
+  #   - Checkout your latest code from the commit that triggered the workflow
+  #   - Set up Docker Buildx (for multi-platform / advanced builds)
+  #   - Build Docker images for:
+  #        - Finance Server
+  #        - HR Server
+  #        - Client App
+  #   - Verify docker-compose configuration
+  # ======================================================
+  build-and-test:
+    # runs-on: The type of machine GitHub should use to run this job.
+    # "ubuntu-latest" is a Linux VM with common tools preinstalled.
+    runs-on: ubuntu-latest
+
+    # steps: Each job is a sequence of steps that run in order.
+    steps:
+      # --------------------------------------------------
+      # 1) Checkout code
+      # This pulls your repo contents into the runner (VM),
+      # at exactly the commit that triggered this workflow
+      # (the push/PR event).
+      # So every build uses the *latest* code for that event.
+      # --------------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # --------------------------------------------------
+      # 2) Set up Docker Buildx
+      # --------------------------------------------------
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # --------------------------------------------------
+      # 3) Login to Docker Hub
+      # This step authenticates with Docker Hub so we can push images.
+      # You must add DOCKER_USERNAME and DOCKER_PASSWORD to GitHub Secrets.
+      # --------------------------------------------------
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: parthibanktech3  # Hardcoded username (safe to be public)
+          password: ${{ secrets.DOCKER_PASSWORD }} # Token stays hidden in GitHub Secrets
+
+      # --------------------------------------------------
+      # 4) Build & Push Finance Server
+      # --------------------------------------------------
+      - name: Build & Push Finance Server
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.finance
+          push: true
+          tags: parthibanktech3/mcp-finance-server:latest
+
+      # --------------------------------------------------
+      # 5) Build & Push HR Server
+      # --------------------------------------------------
+      - name: Build & Push HR Server
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.hr
+          push: true
+          tags: parthibanktech3/mcp-hr-server:latest
+
+      # --------------------------------------------------
+      # 6) Build & Push Client App
+      # --------------------------------------------------
+      - name: Build & Push Client App
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.client
+          push: true
+          tags: parthibanktech3/mcp-client-app:latest
+
+      # --------------------------------------------------
+      # 7) Verify Docker Compose Config
+      # --------------------------------------------------
+      - name: Verify Docker Compose Config
+        run: docker-compose config

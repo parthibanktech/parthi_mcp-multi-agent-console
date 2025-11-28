@@ -11,12 +11,16 @@ from langchain_openai import ChatOpenAI
 load_dotenv()
 
 # ---------------- Streamlit UI ----------------
-st.set_page_config(page_title="Parthi Multi-Agent MCP Console", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="Parthi Multi-Agent MCP Console - V2", page_icon="🤖", layout="wide")
+
+# Get server URLs from environment variables (for Docker) or use localhost (for local dev)
+FINANCE_SERVER_URL = os.getenv("FINANCE_SERVER_URL", "http://localhost:8010")
+HR_SERVER_URL = os.getenv("HR_SERVER_URL", "http://localhost:8011")
 
 st.sidebar.title("⚙️ MCP Configuration")
 st.sidebar.markdown("Connected Servers:")
-st.sidebar.success("💰 Finance Server → http://localhost:8010/mcp")
-st.sidebar.success("👩‍💼 HR Server → http://localhost:8011/mcp")
+st.sidebar.success(f"💰 Finance Server → {FINANCE_SERVER_URL}/mcp")
+st.sidebar.success(f"👩‍💼 HR Server → {HR_SERVER_URL}/mcp")
 
 OPENAI_API_KEY = st.sidebar.text_input("🔑 OpenAI API Key", value=os.getenv("OPENAI_API_KEY", ""), type="password")
 st.sidebar.divider()
@@ -41,15 +45,19 @@ def is_port_in_use(port: int) -> bool:
 
 async def query_agents(prompt):
     """Send query to both Finance & HR MCP Servers."""
-    # Use localhost for internal communication in the same container
-    local_ip = "127.0.0.1"
-
-    if not is_port_in_use(8010) or not is_port_in_use(8011):
-        return "⚠️ One or more MCP servers are not running. Please start them first."
+    # Parse server URLs from environment variables
+    finance_host = FINANCE_SERVER_URL.replace("http://", "").split(":")[0]
+    hr_host = HR_SERVER_URL.replace("http://", "").split(":")[0]
+    
+    # Check if servers are reachable
+    if not is_port_in_use(8010) and finance_host == "localhost":
+        return "⚠️ Finance MCP server is not running. Please start it first."
+    if not is_port_in_use(8011) and hr_host == "localhost":
+        return "⚠️ HR MCP server is not running. Please start it first."
 
     client = MultiServerMCPClient({
-        "finance": {"url": f"http://{local_ip}:8010/mcp", "transport": "streamable_http"},
-        "hr": {"url": f"http://{local_ip}:8011/mcp", "transport": "streamable_http"},
+        "finance": {"url": f"{FINANCE_SERVER_URL}/mcp", "transport": "streamable_http"},
+        "hr": {"url": f"{HR_SERVER_URL}/mcp", "transport": "streamable_http"},
     })
 
     tools = await client.get_tools()

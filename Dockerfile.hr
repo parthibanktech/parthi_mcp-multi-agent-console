@@ -1,0 +1,32 @@
+# Use a lightweight Python 3.11 base image
+FROM python:3.11-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install necessary system packages
+# - build-essential is required for compiling some Python dependencies
+# - clearing apt cache reduces image size
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the dependency list to the container
+COPY requirements.txt .
+
+# Install Python packages without caching (saves space)
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the HR MCP server file into the container
+# (If multiple files exist, replace with: COPY . .)
+COPY hr_mcp_server.py .
+
+# Expose port 8011 to allow external access
+EXPOSE 8011
+
+# Set environment variable for the port
+# (Useful if the app reads the PORT value dynamically)
+ENV PORT=8011
+
+# Command to start the MCP server when the container runs
+CMD ["python", "hr_mcp_server.py"]

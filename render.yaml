@@ -1,12 +1,47 @@
 services:
+  # Finance MCP Server
   - type: web
-    name: mcp-multi-agent-console
+    name: mcp-finance-server
     env: docker
     plan: free
     region: oregon
     branch: main
+    dockerfilePath: ./Dockerfile.finance
+    dockerContext: .
+    envVars:
+      - key: PORT
+        value: 8010
+    healthCheckPath: /
+
+  # HR MCP Server
+  - type: web
+    name: mcp-hr-server
+    env: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: ./Dockerfile.hr
+    dockerContext: .
+    envVars:
+      - key: PORT
+        value: 8011
+    healthCheckPath: /
+
+  # Streamlit Client Application
+  - type: web
+    name: mcp-client-app
+    env: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: ./Dockerfile.client
+    dockerContext: .
     envVars:
       - key: PORT
         value: 8501
       - key: OPENAI_API_KEY
         sync: false
+      - key: FINANCE_SERVER_URL
+        value: https://mcp-finance-server.onrender.com
+      - key: HR_SERVER_URL
+        value: https://mcp-hr-server.onrender.com
