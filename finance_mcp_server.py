@@ -15,6 +15,7 @@ mcp = FastMCP(
         - Call generate_invoice(customer_id) to generate a new invoice for a customer.
         - Call get_budget_summary(department) to retrieve the budget overview of any department.
     """,
+    host="0.0.0.0",
     port=8010
 )
 

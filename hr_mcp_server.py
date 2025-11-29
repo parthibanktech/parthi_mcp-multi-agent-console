@@ -15,6 +15,7 @@ mcp = FastMCP(
         - Call get_employee_details(employee_id) to fetch an employee's information.
         - Call check_leave_balance(employee_id) to view the available leave balance for an employee.
     """,
+    host="0.0.0.0",
     port=8011
 )
 
