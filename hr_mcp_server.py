@@ -39,6 +39,13 @@ def get_employee_details(employee_id: str) -> dict:
             "name": "Priya Sharma",
             "role": "HR Manager",
             "department": "Human Resources"
+        },
+
+         "E004": {
+            "employee_id": "E004",
+            "name": "Priya Sharma4",
+            "role": "HR Manager4",
+            "department": "Human Resources4"
         }
     }
 
