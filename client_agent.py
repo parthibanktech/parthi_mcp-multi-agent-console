@@ -34,7 +34,7 @@ if dark:
         </style>
     """, unsafe_allow_html=True)
 
-st.title("🤝 Parthi  Multi-Agent MCP Console")
+st.title("🤝 Parthi  Multi-Agent MCP Console (AWS EC2)")
 st.caption("Interact with both Finance & HR MCP Agents through LangChain + Streamlit.")
 
 # ---------------- Helper Functions ----------------

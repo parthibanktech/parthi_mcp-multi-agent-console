@@ -57,7 +57,10 @@ To enable automatic deployment, go to your GitHub Repo > Settings > Secrets and 
 | `EC2_SSH_KEY` | Content of your `mcp-key.pem` file |
 
 ### Step 4: Enable Deployment Job
-Open `.github/workflows/main.yml` and **uncomment** the `deploy-to-ec2` job section at the bottom.
+### Step 4: Verify Deployment Job
+The `deploy-to-ec2` job has been added to `.github/workflows/main.yml`. It is configured to run automatically on pushes to `main` after the build job succeeds.
+
+Ensure you have set the secrets in Step 3 correctly.
 
 Now, every time you push to `main`, GitHub will:
 1.  Test your code.

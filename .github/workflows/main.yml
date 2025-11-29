@@ -112,3 +112,58 @@ jobs:
       # --------------------------------------------------
       - name: Verify Docker Compose Config
         run: docker compose config
+
+  # ======================================================
+  # CD STAGE: Deploy to AWS EC2
+  # This job runs ONLY after 'build-and-test' succeeds.
+  # It connects to your EC2 instance and updates the containers.
+  # ======================================================
+  deploy-to-ec2:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create project directory on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            mkdir -p /home/${{ secrets.EC2_USER }}/mcp-project
+
+      - name: Copy docker-compose.yml to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "/home/${{ secrets.EC2_USER }}/mcp-project"
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/${{ secrets.EC2_USER }}/mcp-project
+            
+            # Pull the latest images from Docker Hub
+            # We use 'docker-compose' (v1/standalone) or 'docker compose' (v2)
+            # Trying 'docker compose' first, falling back if needed, or just assuming standard setup.
+            # Given the guide installs 'docker-compose', we'll use that.
+            
+            # Pull latest images
+            sudo docker-compose pull
+            
+            # Restart containers
+            sudo docker-compose up -d --remove-orphans
+            
+            # Cleanup unused images
+            sudo docker image prune -f
