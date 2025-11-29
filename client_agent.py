@@ -56,8 +56,8 @@ async def query_agents(prompt):
         return "⚠️ HR MCP server is not running. Please start it first."
 
     client = MultiServerMCPClient({
-        "finance": {"url": f"{FINANCE_SERVER_URL}/mcp", "transport": "streamable_http"},
-        "hr": {"url": f"{HR_SERVER_URL}/mcp", "transport": "streamable_http"},
+        "finance": {"url": f"{FINANCE_SERVER_URL}/sse", "transport": "sse"},
+        "hr": {"url": f"{HR_SERVER_URL}/sse", "transport": "sse"},
     })
 
     tools = await client.get_tools()
@@ -98,4 +98,6 @@ if prompt:
                 st.markdown(response)
                 st.session_state.messages.append({"role": "assistant", "content": response})
             except Exception as e:
-                st.error(f"⚠️ {e}")
+                import traceback
+                st.error(f"⚠️ Error: {e}")
+                st.code(traceback.format_exc())
