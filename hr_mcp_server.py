@@ -69,4 +69,4 @@ if __name__ == "__main__":
     if is_port_in_use(8011):
         print("⚠️  Port 8011 already in use — skipping server start.")
     else:
-        mcp.run(transport="sse", host="0.0.0.0", port=8011)
+        mcp.run(transport="sse", port=8011)
